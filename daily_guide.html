@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日題目</title>
+<style>
+body{font-family:sans-serif;padding:10px;max-width:600px;margin:0 auto;font-size:15px;}
+#cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:12px;}
+.cal-head{text-align:center;font-weight:bold;font-size:12px;}
+.cal-day{text-align:center;padding:6px 2px;cursor:pointer;border-radius:4px;font-size:13px;}
+.cal-day:hover{background:#eee;}
+.cal-day.today{background:#333;color:white;}
+.cal-day.selected{background:#666;color:white;}
+.cal-day.has-data{font-weight:bold;}
+.cal-day.empty{visibility:hidden;}
+#nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+#content{border-top:1px solid #ccc;padding-top:10px;}
+h2{font-size:16px;margin:6px 0;}
+h3{font-size:14px;margin:8px 0 4px;}
+p,li{font-size:14px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <button onclick="changeMonth(-1)">&#8592;</button>
+  <span id="month-label"></span>
+  <button onclick="changeMonth(1)">&#8594;</button>
+</div>
+<div id="cal"></div>
+<div id="content"></div>
+
+<script>
+const data = {
+"03/16":{q:"1. 搬到火星只能帶3個玩具，選什麼？",points:["體積與運費：火星運輸成本極高，需考慮空間壓縮率。","擴充與變化：考慮具有發散性遊戲價值的玩具（如一副撲克牌有數百種玩法，優於單一功能遙控車）。","資源依賴：避免需要大量電力或消耗品的玩具（火星沒電池賣），物理類更長久。"],follow:["如果你在火星上會很無聊，選擇的玩具會不同嗎？","你最喜歡的玩具和在火星最有用的玩具是同一個嗎？"]},
+"03/17":{q:"2. 家裡只能留一件電器，選冰箱還是電視？",points:["生存優先級：冰箱是延緩熵增的工具，防止食物腐敗，保障健康。","資訊vs食物：電視功能可被收音機、書本部分替代；冰箱的低溫環境在自然界極難模擬。","能源效率：冰箱是維繫家計的核心，討論必需品與奢侈品的邊界。"],follow:["如果是夏天38度，你的答案會改變嗎？","如果讓你選第三件電器，你會選什麼？為什麼它排第三？"]},
+"03/18":{q:"3. 如果全家停電一天，什麼事最不方便？",points:["隱形設施失效：抽水馬桶若靠馬達則無法供水，熱水器可能無法點火。","數位孤島：Wi-Fi斷訊導致外部資訊獲取困難。","熱力學問題：冰箱門開合會導致冷能流失。引導孩子區分舒適度下降與生存受威脅的差異。"],follow:["100年前的人也住在同樣的房子裡，他們停電時怎麼過？","如果知道明天會停電，你今天會提前做什麼準備？"]},
+"03/19":{q:"4. 100元買全家點心，買貴的還是便宜的？",points:["預算分配：買1個100元的高級蛋糕 vs 10顆10元的包子。","邊際效用：討論第一口美味與每個人都能分到的集體飽足感哪個價值高。","社交公平性：在資源有限時，滿足多數人的需求通常是更穩定的決策。"],follow:["如果只有你一個人吃，你還會做同樣的選擇嗎？","有沒有辦法用100元讓每個人都覺得自己是最受照顧的那個？"]},
+"03/20":{q:"5. 你和弟弟妹妹（或同學）共用一個空間，你最希望哪一區是你的？為什麼？",points:["物理資源分配：誰靠近電源插座？誰靠近採光窗？","邊界設定：實體標記（如膠帶）能減少模糊地帶的摩擦。","協議精神：討論共有區域（走道）的維護責任。引導建立物權與共享的概念。"],follow:["如果對方也想要同一區，你會怎麼說服他讓給你？","有沒有一種分法，可以讓兩個人都覺得自己賺到了？"]},
+"03/21":{q:"6. 「家事免死金牌」你會用在什麼時候？",points:["機會成本：應該用在自己最厭惡、或最耗時的任務（如洗油膩碗盤）。","緊急避險：用在體力耗盡或有更高價值任務（如準備大考）時。","策略儲蓄：討論唯一資源該不該隨意消耗，還是留待危機發生。"],follow:["如果可以設計家事免死金牌的使用規則，你會加上哪些條件？","你最討厭的家事，有沒有辦法讓它變得不那麼討厭？"]},
+"03/23":{q:"1. 除了寫字，鉛筆還能變出什麼新玩法？",points:["物理槓桿：當作支點或撥動小物品。","材料特性：鉛筆芯的石墨具有導電性與潤滑性（可用於卡住的鎖心）。","測量與指向：當作臨時長度標準，或利用影子製作太陽鐘。"],follow:["你身邊有什麼東西，換個角度看會有完全不同的用途？","如果鉛筆是你唯一的工具，你能用它解決哪些問題？"]},
+"03/24":{q:"2. 如果湯匙變大100倍，它能拿來做什麼？",points:["工具功能轉化：凹面可當小船、浴缸或集雨器。","結構應用：拋物線曲面可當作聲音反射板或臨時避難所。","槓桿作用：長柄可當作跨越水溝的橋樑或攻城槌。討論尺度變化如何改變功能。"],follow:["如果湯匙縮小到原來的百分之一，它又能做什麼？","你身邊有什麼東西，放大100倍會很有用？"]},
+"03/25":{q:"3. 如果鞋子會說話，回家會抱怨什麼？",points:["壓力分佈：抱怨主人走路重心偏向內側或外側（足弓分析）。","環境感應：抱怨柏油路的熱、雨水的濕度。","維護週期：抱怨許久沒被刷洗或鞋墊塌陷。引導孩子從微觀視角觀察磨損細節。"],follow:["如果你是鞋子，你最希望主人為你做什麼？","你穿的鞋子現在最可能在抱怨什麼？"]},
+"03/26":{q:"4. 設計一個「不用手」就能撐傘的方法。",points:["穿戴式工程：頭盔式傘骨、背負式支撐架。","空氣力學：利用強力出風口形成氣簾擋雨（Air Umbrella）。","自主控制：無人機感應跟隨傘。討論能源供應與穩定平衡的問題。"],follow:["你的設計需要電嗎？如果沒電怎麼辦？","這個設計在颱風天還能用嗎？"]},
+"03/27":{q:"5. 如果雨滴掉下來是軟糖，會有什麼災難？",points:["表面力學：路面會因糖分變黏，輪胎摩擦力異常導致交通癱瘓。","生物系統潰敗：招來大量昆蟲與細菌，且植物葉片氣孔被封住無法呼吸。","水源污染：水庫變糖水導致飲用水危機。討論單一元素改變引發的連鎖反應。"],follow:["如果你是市長，軟糖雨的第一天你要做什麼緊急措施？","除了災難，軟糖雨有沒有任何好處？"]},
+"03/28":{q:"6. 想像並設計一個會飛的書包。",points:["動力來源：噴射、涵道風扇或磁浮？","操作邏輯：視覺辨識自動跟隨，還是聲控控制高度？","安全備援：失去動力時的降落傘機制。討論重量與推力的平衡。"],follow:["會飛的書包最大的安全問題是什麼？怎麼解決？","如果書包會飛，學校需要制定什麼新規則？"]}
+};
+
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+const today = new Date();
+
+function pad(n){return n<10?'0'+n:n;}
+function dateKey(y,m,d){return pad(m+1)+'/'+pad(d);}
+
+function renderCalendar(){
+  const label = document.getElementById('month-label');
+  label.textContent = currentYear+'年'+(currentMonth+1)+'月';
+  const cal = document.getElementById('cal');
+  cal.innerHTML='';
+  ['日','一','二','三','四','五','六'].forEach(d=>{
+    const h=document.createElement('div');
+    h.className='cal-head';h.textContent=d;cal.appendChild(h);
+  });
+  const first = new Date(currentYear,currentMonth,1).getDay();
+  const days = new Date(currentYear,currentMonth+1,0).getDate();
+  for(let i=0;i<first;i++){
+    const e=document.createElement('div');e.className='cal-day empty';cal.appendChild(e);
+  }
+  for(let d=1;d<=days;d++){
+    const div=document.createElement('div');
+    div.className='cal-day';
+    div.textContent=d;
+    const key=dateKey(currentYear,currentMonth,d);
+    if(data[key]) div.classList.add('has-data');
+    const isToday=d===today.getDate()&&currentMonth===today.getMonth()&&currentYear===today.getFullYear();
+    if(isToday) div.classList.add('today');
+    div.onclick=()=>showDay(currentYear,currentMonth,d);
+    cal.appendChild(div);
+  }
+}
+
+function showDay(y,m,d){
+  document.querySelectorAll('.cal-day.selected').forEach(el=>el.classList.remove('selected'));
+  const key=dateKey(y,m,d);
+  const content=document.getElementById('content');
+  if(!data[key]){content.innerHTML='<p>今天沒有題目。</p>';return;}
+  const item=data[key];
+  let html='<h2>'+pad(m+1)+'/'+pad(d)+' — '+item.q+'</h2>';
+  html+='<h3>思考方向</h3><ol>';
+  item.points.forEach(p=>html+='<li>'+p+'</li>');
+  html+='</ol><h3>追問</h3><ul>';
+  item.follow.forEach(f=>html+='<li>'+f+'</li>');
+  html+='</ul>';
+  content.innerHTML=html;
+  // mark selected
+  const allDays=document.querySelectorAll('.cal-day');
+  allDays.forEach(el=>{
+    if(parseInt(el.textContent)===d&&!el.classList.contains('empty')) el.classList.add('selected');
+  });
+}
+
+function changeMonth(dir){
+  currentMonth+=dir;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  renderCalendar();
+}
+
+renderCalendar();
+showDay(today.getFullYear(),today.getMonth(),today.getDate());
+</script>
+</body>
+</html>
